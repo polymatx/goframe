@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,6 +12,9 @@ import (
 )
 
 const version = "1.0.0"
+
+//go:embed embedded/pkg
+var embeddedPkg embed.FS
 
 func main() {
 	if len(os.Args) < 2 {
@@ -48,7 +53,7 @@ Usage:
   goframe <command> [arguments]
 
 Commands:
-  new <name>           Create new project
+  new <name>           Create new project with embedded framework packages
   gen model <name>     Generate model
   gen handler <name>   Generate handler
   gen crud <name>      Generate full CRUD (model + handler)
@@ -88,6 +93,7 @@ func handleNew() {
 }
 
 func createProject(name string) error {
+	// Create directory structure
 	dirs := []string{
 		name,
 		filepath.Join(name, "cmd", "server"),
@@ -104,14 +110,18 @@ func createProject(name string) error {
 		}
 	}
 
+	// Copy embedded pkg files
+	if err := copyEmbeddedPkg(name); err != nil {
+		return fmt.Errorf("failed to copy embedded packages: %w", err)
+	}
+
+	// Create main.go using local packages
 	mainGo := `package main
 
 import (
-	"net/http"
-
 	"{{.Module}}/internal/handlers"
-	"github.com/polymatx/goframe/pkg/app"
-	"github.com/polymatx/goframe/pkg/middleware"
+	"{{.Module}}/pkg/app"
+	"{{.Module}}/pkg/middleware"
 )
 
 func main() {
@@ -124,6 +134,10 @@ func main() {
 	a.Use(middleware.Logger())
 	a.Use(middleware.DefaultCORS())
 
+	// Register root routes
+	handlers.RegisterRootRoutes(a)
+
+	// Register API routes
 	api := a.Group("/api/v1")
 	handlers.RegisterRoutes(api)
 
@@ -138,23 +152,47 @@ func main() {
 		return err
 	}
 
+	// Create routes.go using local packages
 	routesGo := `package handlers
 
-import "github.com/polymatx/goframe/pkg/app"
+import (
+	"net/http"
+
+	"{{.Module}}/pkg/app"
+)
 
 func RegisterRoutes(router *app.RouteGroup) {
 	router.GET("/health", HealthHandler)
 }
+
+// RegisterRootRoutes registers routes at the root level
+func RegisterRootRoutes(a *app.App) {
+	a.Router().HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		ctx := app.NewContext(w, r)
+		ctx.JSON(200, map[string]interface{}{
+			"name":    "{{.Name}}",
+			"version": "1.0.0",
+			"status":  "running",
+			"endpoints": map[string]string{
+				"health": "/api/v1/health",
+			},
+		})
+	}).Methods("GET")
+}
 `
-	if err := os.WriteFile(filepath.Join(name, "internal", "handlers", "routes.go"), []byte(routesGo), 0644); err != nil {
+	if err := writeTemplate(filepath.Join(name, "internal", "handlers", "routes.go"), routesGo, map[string]string{
+		"Module": name,
+		"Name":   name,
+	}); err != nil {
 		return err
 	}
 
+	// Create health.go using local packages
 	healthGo := `package handlers
 
 import (
 	"net/http"
-	"github.com/polymatx/goframe/pkg/app"
+	"{{.Module}}/pkg/app"
 )
 
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
@@ -162,28 +200,89 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.JSON(200, map[string]string{"status": "ok"})
 }
 `
-	if err := os.WriteFile(filepath.Join(name, "internal", "handlers", "health.go"), []byte(healthGo), 0644); err != nil {
+	if err := writeTemplate(filepath.Join(name, "internal", "handlers", "health.go"), healthGo, map[string]string{
+		"Module": name,
+	}); err != nil {
 		return err
 	}
 
+	// Create go.mod with required dependencies (no goframe dependency needed)
 	goMod := fmt.Sprintf(`module %s
 
 go 1.21
 
-require github.com/polymatx/goframe v0.0.0
+require (
+	github.com/gorilla/mux v1.8.1
+	github.com/rs/cors v1.10.1
+	github.com/sirupsen/logrus v1.9.3
+	github.com/go-playground/validator/v10 v10.16.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
+	github.com/prometheus/client_golang v1.17.0
+	golang.org/x/time v0.5.0
+	gorm.io/gorm v1.25.5
+	gorm.io/driver/postgres v1.5.4
+	gorm.io/driver/mysql v1.5.2
+	gorm.io/driver/sqlite v1.5.4
+)
 `, name)
 	if err := os.WriteFile(filepath.Join(name, "go.mod"), []byte(goMod), 0644); err != nil {
 		return err
 	}
 
+	// Create .gitignore
 	gitignore := `*.exe
 *.out
 *.log
 .env
+.env.*
 tmp/
 bin/
+coverage.out
+coverage.html
 `
-	return os.WriteFile(filepath.Join(name, ".gitignore"), []byte(gitignore), 0644)
+	if err := os.WriteFile(filepath.Join(name, ".gitignore"), []byte(gitignore), 0644); err != nil {
+		return err
+	}
+
+	// Add .gitkeep to empty directories
+	emptyDirs := []string{
+		filepath.Join(name, "internal", "models"),
+		filepath.Join(name, "internal", "services"),
+		filepath.Join(name, "config"),
+	}
+	for _, dir := range emptyDirs {
+		if err := os.WriteFile(filepath.Join(dir, ".gitkeep"), []byte(""), 0644); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// copyEmbeddedPkg copies embedded pkg files to the new project
+func copyEmbeddedPkg(projectName string) error {
+	return fs.WalkDir(embeddedPkg, "embedded/pkg", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Calculate destination path
+		relPath := strings.TrimPrefix(path, "embedded/")
+		destPath := filepath.Join(projectName, relPath)
+
+		if d.IsDir() {
+			return os.MkdirAll(destPath, 0755)
+		}
+
+		// Read embedded file
+		content, err := embeddedPkg.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		// Write to destination
+		return os.WriteFile(destPath, content, 0644)
+	})
 }
 
 func handleGen() {
@@ -195,6 +294,9 @@ func handleGen() {
 	genType := os.Args[2]
 	name := os.Args[3]
 
+	// Detect module name from go.mod
+	moduleName := detectModuleName()
+
 	switch genType {
 	case "model":
 		if err := generateModel(name); err != nil {
@@ -203,7 +305,7 @@ func handleGen() {
 		}
 		fmt.Printf("✓ Model '%s' generated: internal/models/%s.go\n", name, strings.ToLower(name))
 	case "handler":
-		if err := generateHandler(name); err != nil {
+		if err := generateHandler(name, moduleName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -213,7 +315,7 @@ func handleGen() {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
-		if err := generateHandler(name); err != nil {
+		if err := generateHandler(name, moduleName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -228,6 +330,20 @@ func handleGen() {
 		fmt.Printf("Unknown type: %s\n", genType)
 		os.Exit(1)
 	}
+}
+
+func detectModuleName() string {
+	content, err := os.ReadFile("go.mod")
+	if err != nil {
+		return "myapp" // default fallback
+	}
+	lines := strings.Split(string(content), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "module ") {
+			return strings.TrimSpace(strings.TrimPrefix(line, "module "))
+		}
+	}
+	return "myapp"
 }
 
 func generateModel(name string) error {
@@ -285,14 +401,14 @@ func (s *{{.Name}}Service) Delete(id uint) error {
 	})
 }
 
-func generateHandler(name string) error {
+func generateHandler(name, moduleName string) error {
 	tmpl := `package handlers
 
 import (
 	"net/http"
 
-	"github.com/polymatx/goframe/pkg/app"
-	"github.com/polymatx/goframe/pkg/binding"
+	"{{.Module}}/pkg/app"
+	"{{.Module}}/pkg/binding"
 )
 
 type {{.Name}}Handler struct{}
@@ -353,6 +469,7 @@ func (h *{{.Name}}Handler) RegisterRoutes(router *app.RouteGroup) {
 	return writeTemplate(filepath.Join("internal", "handlers", strings.ToLower(name)+".go"), tmpl, map[string]string{
 		"Name":      name,
 		"NameLower": strings.ToLower(name),
+		"Module":    moduleName,
 	})
 }
 
@@ -378,7 +495,15 @@ func {{.Name}}() func(http.Handler) http.Handler {
 }
 
 func handleMigrate() {
-	fmt.Println("✓ Migrations completed")
+	// Check if migrations directory exists
+	if _, err := os.Stat("migrations"); os.IsNotExist(err) {
+		fmt.Println("No migrations directory found. Create 'migrations/' directory with SQL files.")
+		os.Exit(1)
+	}
+
+	fmt.Println("Running migrations...")
+	fmt.Println("⚠ Note: Auto-migration requires database connection. Use GORM AutoMigrate in your app.")
+	fmt.Println("✓ Migration check completed")
 }
 
 func handleServe() {

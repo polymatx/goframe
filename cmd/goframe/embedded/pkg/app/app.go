@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/polymatx/goframe/pkg/container"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,7 +19,6 @@ type App struct {
 	server     *http.Server
 	middleware []MiddlewareFunc
 	config     *Config
-	container  *container.Container
 }
 
 // Config holds application configuration
@@ -61,11 +59,7 @@ func New(cfg *Config) *App {
 		router:     mux.NewRouter(),
 		middleware: make([]MiddlewareFunc, 0),
 		config:     cfg,
-		container:  container.New(),
 	}
-
-	// Bind app to container
-	_ = app.container.Bind("app", app)
 
 	return app
 }
@@ -73,11 +67,6 @@ func New(cfg *Config) *App {
 // Router returns the underlying mux router
 func (a *App) Router() *mux.Router {
 	return a.router
-}
-
-// Container returns the IoC container
-func (a *App) Container() *container.Container {
-	return a.container
 }
 
 // Use adds middleware to the application
@@ -90,7 +79,6 @@ func (a *App) Group(prefix string, middleware ...MiddlewareFunc) *RouteGroup {
 	return &RouteGroup{
 		router:     a.router.PathPrefix(prefix).Subrouter(),
 		middleware: middleware,
-		container:  a.container,
 	}
 }
 
@@ -186,7 +174,6 @@ func (a *App) buildHandler() http.Handler {
 type RouteGroup struct {
 	router     *mux.Router
 	middleware []MiddlewareFunc
-	container  *container.Container
 }
 
 // Use adds middleware to the group
@@ -200,7 +187,6 @@ func (g *RouteGroup) Group(prefix string, middleware ...MiddlewareFunc) *RouteGr
 	return &RouteGroup{
 		router:     g.router.PathPrefix(prefix).Subrouter(),
 		middleware: allMiddleware,
-		container:  g.container,
 	}
 }
 
