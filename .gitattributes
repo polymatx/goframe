@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.go text
+*.md text
+*.yml text
+*.yaml text
+*.json text
+*.mod text
+*.sum text
+
+*.exe binary
+*.so binary
+*.dylib binary
