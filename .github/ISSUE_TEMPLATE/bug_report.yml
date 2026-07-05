@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in goframe doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest main.go (or steps) that reproduces the problem.
+      render: go
+    validations:
+      required: true
+  - type: input
+    id: goframe-version
+    attributes:
+      label: goframe version
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version / OS
+      placeholder: go1.26.3 darwin/arm64
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      render: shell

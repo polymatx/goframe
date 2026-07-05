@@ -11,7 +11,7 @@ import (
 	"github.com/polymatx/goframe/pkg/safe"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type jsonDelivery struct {

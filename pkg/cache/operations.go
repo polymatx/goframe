@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // Serializable represents an object that can be encoded/decoded for caching
@@ -189,9 +189,9 @@ func (m *Manager) SIsMember(ctx context.Context, key string, member interface{})
 
 // ZAdd adds one or more members to a sorted set
 func (m *Manager) ZAdd(ctx context.Context, key string, members ...*Z) error {
-	redisMembers := make([]*redis.Z, len(members))
+	redisMembers := make([]redis.Z, len(members))
 	for i, m := range members {
-		redisMembers[i] = &redis.Z{
+		redisMembers[i] = redis.Z{
 			Score:  m.Score,
 			Member: m.Member,
 		}

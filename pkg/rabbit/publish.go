@@ -6,7 +6,7 @@ import (
 
 	"github.com/polymatx/goframe/pkg/random"
 	"github.com/spf13/viper"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func Publish(in Job, cnt string) error {

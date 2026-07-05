@@ -2,8 +2,15 @@
 
 A production-ready Go web framework with batteries included. Built for modern web applications with comprehensive tooling, database support, messaging, caching, and more.
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![CI](https://github.com/polymatx/goframe/actions/workflows/ci.yml/badge.svg)](https://github.com/polymatx/goframe/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/polymatx/goframe.svg)](https://pkg.go.dev/github.com/polymatx/goframe)
+[![Go Report Card](https://goreportcard.com/badge/github.com/polymatx/goframe)](https://goreportcard.com/report/github.com/polymatx/goframe)
+[![codecov](https://codecov.io/gh/polymatx/goframe/branch/main/graph/badge.svg)](https://codecov.io/gh/polymatx/goframe)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+> **Status:** v0.x — the API is usable today but may change in minor releases until v1.0.
+> Read the introduction article: [GoFrame: A Batteries-Included Go Web Framework I Built for Real Projects](https://polymatx.dev/blog/posts/goframe-batteries-included-go-web-framework/).
 
 ## Features
 
