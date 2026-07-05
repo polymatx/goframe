@@ -159,7 +159,7 @@ func (c *Container) Clear() {
 // Inject injects dependencies into struct fields
 func (c *Container) Inject(target interface{}) error {
 	val := reflect.ValueOf(target)
-	if val.Kind() != reflect.Ptr {
+	if val.Kind() != reflect.Pointer {
 		return fmt.Errorf("target must be a pointer")
 	}
 

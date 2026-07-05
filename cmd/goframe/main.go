@@ -105,7 +105,7 @@ func createProject(name string) error {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0755); err != nil { // #nosec G703 -- scaffold dirs are created under the user-supplied project name by design
 			return err
 		}
 	}
@@ -225,7 +225,7 @@ require (
 	gorm.io/driver/sqlite v1.5.4
 )
 `, name)
-	if err := os.WriteFile(filepath.Join(name, "go.mod"), []byte(goMod), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(name, "go.mod"), []byte(goMod), 0644); err != nil { // #nosec G703 -- scaffolding writes into the user-supplied project directory by design
 		return err
 	}
 
@@ -240,7 +240,7 @@ bin/
 coverage.out
 coverage.html
 `
-	if err := os.WriteFile(filepath.Join(name, ".gitignore"), []byte(gitignore), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(name, ".gitignore"), []byte(gitignore), 0644); err != nil { // #nosec G703 -- scaffolding writes into the user-supplied project directory by design
 		return err
 	}
 
@@ -251,7 +251,7 @@ coverage.html
 		filepath.Join(name, "config"),
 	}
 	for _, dir := range emptyDirs {
-		if err := os.WriteFile(filepath.Join(dir, ".gitkeep"), []byte(""), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".gitkeep"), []byte(""), 0644); err != nil { // #nosec G703 -- scaffolding writes into the user-supplied project directory by design
 			return err
 		}
 	}
@@ -271,7 +271,7 @@ func copyEmbeddedPkg(projectName string) error {
 		destPath := filepath.Join(projectName, relPath)
 
 		if d.IsDir() {
-			return os.MkdirAll(destPath, 0755)
+			return os.MkdirAll(destPath, 0755) // #nosec G703 -- embedded files are extracted to the user-supplied destination by design
 		}
 
 		// Read embedded file
@@ -281,7 +281,7 @@ func copyEmbeddedPkg(projectName string) error {
 		}
 
 		// Write to destination
-		return os.WriteFile(destPath, content, 0644)
+		return os.WriteFile(destPath, content, 0644) // #nosec G703 -- embedded files are extracted to the user-supplied destination by design
 	})
 }
 
@@ -534,7 +534,7 @@ func handleBuild() {
 		fmt.Fprintf(os.Stderr, "Error creating bin directory: %v\n", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command("go", "build", "-o", output, "./cmd/server")
+	cmd := exec.Command("go", "build", "-o", output, "./cmd/server") // #nosec G702 -- fixed argv; only the -o output path comes from the user, by design
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -549,7 +549,7 @@ func writeTemplate(path, tmplStr string, data map[string]string) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(path)
+	f, err := os.Create(path) // #nosec G703 -- generated file path is derived from the user-supplied name by design
 	if err != nil {
 		return err
 	}

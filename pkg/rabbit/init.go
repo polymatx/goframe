@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/polymatx/goframe/pkg/healthz"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Channel interface {

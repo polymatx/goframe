@@ -1,62 +1,64 @@
+version: "2"
 run:
-  timeout: 5m
   modules-download-mode: readonly
-
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    - goimports
+    - gosec
     - misspell
     - unconvert
-    - gosec
   disable:
     - exhaustive
     - exhaustruct
-
-linters-settings:
-  errcheck:
-    check-type-assertions: false
-    check-blank: false
-
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-      - shadow
-
-  misspell:
-    locale: US
-
-  gosec:
-    excludes:
-      - G301
-      - G302
-      - G304
-      - G306
-      - G104
-
+  settings:
+    errcheck:
+      check-type-assertions: false
+      check-blank: false
+    gosec:
+      excludes:
+        - G301
+        - G302
+        - G304
+        - G306
+        - G104
+    govet:
+      disable:
+        - fieldalignment
+        - shadow
+      enable-all: true
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+        path: _test\.go
+      - linters:
+          - errcheck
+          - gosec
+        path: examples/
+      - linters:
+          - errcheck
+        path: pkg/rabbit/
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-
-    - path: examples/
-      linters:
-        - errcheck
-        - gosec
-
-    - path: pkg/rabbit/
-      linters:
-        - errcheck
-
   max-issues-per-linter: 50
   max-same-issues: 10
-
-
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

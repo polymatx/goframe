@@ -9,9 +9,9 @@ import (
 	"github.com/polymatx/goframe/pkg/assert"
 	"github.com/polymatx/goframe/pkg/random"
 	"github.com/polymatx/goframe/pkg/safe"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type jsonDelivery struct {

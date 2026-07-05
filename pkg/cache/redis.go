@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/polymatx/goframe/pkg/xlog"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 )
 
