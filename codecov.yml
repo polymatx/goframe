@@ -1,0 +1,19 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%   # fail PRs that drop total coverage by more than 1%
+    patch:
+      default:
+        target: 50%     # new/changed lines in a PR should be at least half covered
+        informational: true
+
+comment:
+  layout: "condensed_header, diff, files"
+  behavior: default
+  require_changes: true
+
+ignore:
+  - "examples/**"
+  - "cmd/goframe/embedded/**"
