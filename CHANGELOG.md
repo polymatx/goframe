@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Minimum Go version is now **1.26**: the updated `golang.org/x/*` modules require it,
+  and Go 1.25 is no longer supported upstream. CI tests against Go 1.26 and 1.27
+- Dependencies updated: validator v10.30.4, Prometheus client v1.24.1, amqp091-go v1.15.0,
+  go-redis v9.22.0, logrus v1.10.2, mongo-driver v1.17.10, x/crypto v0.55.0, x/time v0.16.0,
+  GORM Postgres driver v1.6.3
+- CI actions updated: setup-go v7
+
 ## [0.1.1] - 2026-07-06
 
 ### Fixed
@@ -46,5 +57,6 @@ First tagged release.
 - All dependencies updated to current versions (GORM 1.31, Viper, Prometheus client, JWT v5, ...)
 - Minimum Go version is now **1.25**; CI tests against Go 1.25 and 1.26
 
+[Unreleased]: https://github.com/polymatx/goframe/compare/v0.1.1...HEAD
 [0.1.1]: https://github.com/polymatx/goframe/releases/tag/v0.1.1
 [0.1.0]: https://github.com/polymatx/goframe/releases/tag/v0.1.0
