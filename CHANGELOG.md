@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Release workflow: pushing a `v*` tag publishes the GitHub Release, with notes taken
-  from this changelog
+- Release workflow: pushing a `v*` tag publishes its GitHub Release, plus any missing
+  ones for older tags, with notes taken from this changelog
 
 ### Changed
 
