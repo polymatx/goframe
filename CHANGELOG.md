@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2026-10-06
 
+### Added
+
+- Release workflow: pushing a `v*` tag publishes the GitHub Release, with notes taken
+  from this changelog
+
 ### Changed
 
 - Minimum Go version is now **1.26**: the updated `golang.org/x/*` modules require it,
